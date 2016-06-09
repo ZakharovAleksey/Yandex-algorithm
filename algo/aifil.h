@@ -13,7 +13,9 @@
 #ifndef first
 #define first
 /*
-	Вопрос 1.
+	Вопрос 1
+
+
 	Напишите функцию, которая перебирает натуральные числа от 1 до N включительно и раскладывает каждое число на простые
 	множители. Результат можно выводить на экран либо копить в любой структуре данных.
 */
@@ -122,8 +124,21 @@ void solv(std::vector<T> & v, size_t m) {
 
 
 
-#ifndef third
-#define third
+#ifndef forth
+#define forth
+
+/*
+	Вопрос 4 
+
+	Имеется простой односвязный список размера N. Необходимо реализовать алгоритм, который перепаковывает список так, 
+	чтобы за первым элеметом следовал последний, затем второй, затем предпоследний и т. д. Пример работы алгоритма:
+	 исходный список: 1-2-3-4-5-6-7-8
+	 перепакованный список: 1-8-2-7-3-6-4-5.
+
+	Оценить сложность предложенного алгоритма.
+
+*/
+
 
 void third_task_solver(std::list<int> & l) {
 	std::cout << "list before: ";
@@ -152,31 +167,161 @@ void third_task_solver(std::list<int> & l) {
 }
 
 
-#endif // !third
+#endif // !forth
 
 
-#ifndef forth
-#define forth
+#ifndef third
+#define third
 
-void forth_task_solver() {
-	std::string line;
-	std::getline(std::cin, line);
+/*
+	Вопрос 3 
+
+	Напишите простую реализацию функции для разбора параметров командной строки (getopt).
+
+	Полагаем, что нам требуется структура данных, содержащая заранее известный допустимый набор параметров различного
+	типа - строки, целые, числа с плавающей точкой и т. д., а также признак, является ли этот параметр обязательным.
+	Полагаем, что параметры могут передаваться только в "длинном" формате с обязательным "--" перед именем параметра
+	(то есть "--my-option-name my-option-val", "--my-option-name=my-option-val", "--my-boolean-option").
+	
+	Функция должна обязательно уметь обрабатывать параметр "--help" (если он указан в списке параметров при вызове функции), выводящий пример использования (необязательные параметры должны выводиться в квадратных скобках).
+
+
+*/
+
+enum ArgumentStatus
+{
+	no_argument = 0,
+	require_argument = 1
+};
+
+struct Option
+{
+	std::string option_name_;
+	int argument_status_;
+	int* on_value_ptr_;
+	int set_value_;
+
+	Option() : option_name_(), argument_status_(), on_value_ptr_(nullptr), set_value_(0) {}
+
+	Option(std::string name, int is_arg, int* on_value_ptr, int set_value) :
+		option_name_(name), argument_status_(is_arg), on_value_ptr_(on_value_ptr), set_value_(set_value) {}
+
+	void set(std::string name, int is_arg, int* on_value_ptr, int set_value) {
+		option_name_ = name;
+		argument_status_ = is_arg;
+		on_value_ptr_ = on_value_ptr;
+		set_value_ = set_value;
+	}
+};
+
+
+int get_top_(std::string & line, Option opt_mas[], size_t size, size_t cur_mas_id) {
 	int i{ 0 };
-	std::string temp;
+	std::string opt_name;
+	std::string arg_value;
 
-	while (i != line.length()) {
-		if (line[i] != ' ' && line[i] != '=') {
-			temp.push_back(line[i++]);
-		}
-		else {
-			std::cout << temp;
-			if (temp == "--help") {
-				std::cout << " yep \n";
+	while (i != line.length())
+	{
+		// Если подряд --
+		if (line[i] == '-' && line[i + 1] == '-') {
+			i += 2;
+			// Получили имя операции
+			while (i != line.length() && line[i] != ' ' && line[i] != '=')
+				opt_name.push_back(line[i++]);
+
+			// Если это хэлп то
+			if (opt_name == "help") {
+				std::cout << "HELP init\n";
+				std::cout << "Current " << cur_mas_id << " param demo: " << opt_mas[cur_mas_id].option_name_;
+				if (opt_mas[cur_mas_id].argument_status_ == ArgumentStatus::require_argument) {
+					std::cout << "=[]\n";
+				}
+				else {
+					std::cout << "=() ORE nothing \n";
+				}
+				line.erase(0, i);
+				get_top_(line, opt_mas, size, cur_mas_id);
 			}
-			temp.clear();
+
+			// Если опция совпадает с той, что в массиве, то
+			if (opt_mas[cur_mas_id].option_name_ == opt_name) {
+				// Если требуется аргумент
+				if (opt_mas[cur_mas_id].argument_status_ == ArgumentStatus::require_argument) {
+					// После должен быть равно то считываем аргумент
+					if (line[i] == '=') {
+						++i; // Так как были в равно, а теперь перешли к аргументу
+						while (i != line.length() && line[i] != ' ')
+							arg_value.push_back(line[i++]);
+						int value = std::stoi(arg_value);
+						*opt_mas[cur_mas_id].on_value_ptr_ = value;
+						// теперь, когда мы сохранили значение неоходимо заново выполнить функцию
+						line.erase(0, i);
+						get_top_(line, opt_mas, size, ++cur_mas_id);
+
+					}
+					// если сразу полсе опции нет =, то говорим что аргумент должен иметь параметр и считываем до следующего
+					else {
+						line.erase(0, i);
+						// Тут рекурсия
+						get_top_(line, opt_mas, size, ++cur_mas_id);
+					}
+				}
+				// Если не требуется аргумент
+				else {
+					line.erase(0, i);
+					get_top_(line, opt_mas, size, ++cur_mas_id);
+				}
+			}
+			// Если опция не совпадает с той что в массиве то нужно считывать до следующего --
+			else {
+				line.erase(0, i);
+				// Тут рекурсия
+				get_top_(line, opt_mas, size, ++cur_mas_id);
+			}
+			return -1;
+		}
+		// идем по строке пока не встретим --
+		else {
 			++i;
+			continue;
 		}
 	}
+	return -1;
 }
 
-#endif // !forth
+// прилагается main() так как для других заданий main() тривиальна
+/*
+int main() {
+	srand(time(NULL));
+
+	using std::cout;
+	using std::endl;
+
+	int a_ptr = 0;
+	int b_ptr = 0;
+	int c_ptr = 0;
+
+	std::string line;
+	std::getline(std::cin, line);
+
+	size_t const size = 3;
+	Option comand_list[size];
+
+	comand_list[0].set("int", ArgumentStatus::require_argument, &a_ptr, 1);
+	comand_list[1].set("float", ArgumentStatus::no_argument, &b_ptr, 10);
+	comand_list[2].set("int", ArgumentStatus::require_argument, &c_ptr, 1);
+
+	while (get_top_(line, comand_list, size, 0) != -1);
+	std::cout << "PARAMETRES\n";
+
+	cout << "a = " << a_ptr << '\n';
+	cout << "b = " << b_ptr << '\n';
+	cout << "c = " << c_ptr << '\n';
+
+	cout << "done\n";
+
+	return 0;
+}
+*/
+
+#endif // !third
