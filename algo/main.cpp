@@ -22,28 +22,15 @@ int main() {
 	using std::cout;
 	using std::endl;
 
-	int a_ptr = 0;
-	int b_ptr = 0;
-	int c_ptr = 0;
+	std::vector<Jog<int>> v;
+	v.push_back(Jog<int>(0, 1));
+	v.push_back(Jog<int>(1, 3));
+	v.push_back(Jog<int>(-100, -99));
 
-	std::string line;
-	std::getline(std::cin, line);
+	display(v);
+	cout << max_jog_count(v) << endl;
 
-	size_t const size = 3;
-	Option comand_list[size];
-
-	comand_list[0].set("int", ArgumentStatus::require_argument, &a_ptr, 1);
-	comand_list[1].set("float", ArgumentStatus::no_argument, &b_ptr, 10);
-	comand_list[2].set("int", ArgumentStatus::require_argument, &c_ptr, 1);
-
-	while (get_top_(line, comand_list, size, 0) != -1);
-	std::cout << "PARAMETRES\n";
-
-	cout << "a = " << a_ptr << '\n';
-	cout << "b = " << b_ptr << '\n';
-	cout << "c = " << c_ptr << '\n';
-
-	cout << "done\n";
+	
 
 	return 0;
 }
