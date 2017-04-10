@@ -1,6 +1,11 @@
 #pragma once
 
+#ifndef part_two_h
+#define part_two_h
+
 #include<cmath>
+
+#pragma region Sorting implementation
 
 template<typename T>
 void display(std::vector<T> const & v) {
@@ -9,6 +14,7 @@ void display(std::vector<T> const & v) {
 	std::cout << std::endl;
 }
 
+#pragma region n^2
 
 //	Сортровка выбором
 template <typename T>
@@ -42,7 +48,9 @@ void bubble_sort(std::vector<T> & v) {
 	display(v);
 }
 
-// Эффективные методы сортировки
+#pragma endregion
+
+#pragma region n*log(n)
 
 // Сортировка Шелла (с уменьшающимися расстояниями)
 template<typename T>
@@ -66,7 +74,7 @@ void shell_sort(std::vector<T> & v) {
 // Пирамидальная сортировка
 template <typename T>
 void down_heap(std::vector<T> & v, size_t id, size_t size) {
-	
+
 	while (id < size / 2)
 	{
 		size_t left_id = 2 * id + 1;
@@ -96,8 +104,8 @@ void heap_sort(std::vector<T> & v) {
 // Быстрая сортировка
 template<typename T>
 size_t partition(std::vector<T> & v, size_t left, size_t right) {
-	size_t id = ( right + left ) >> 1;
-	while (left <= right){
+	size_t id = (right + left) >> 1;
+	while (left <= right) {
 		while (v[left] < v[id])
 			++left;
 		while (v[right] > v[id])
@@ -138,7 +146,7 @@ void q_sort(std::vector<T> & v, size_t left, size_t right) {
 	size_t separater = partition_sec(v, left, right);
 	if (left < separater)
 		q_sort(v, left, separater - 1);
-	if(separater < right)
+	if (separater < right)
 		q_sort(v, separater + 1, right);
 }
 
@@ -151,7 +159,7 @@ void quick_sort(std::vector<T> & v, size_t left, size_t right) {
 			q_sort(v, left, separater - 1);
 		if (separater < right)
 			q_sort(v, separater + 1, right);
-	}	
+	}
 	else {
 		if (separater < right)
 			q_sort(v, separater + 1, right);
@@ -159,6 +167,57 @@ void quick_sort(std::vector<T> & v, size_t left, size_t right) {
 			q_sort(v, left, separater - 1);
 	}
 }
+
+// Сортировка слиянием (работет правильно только для массивов размеров степени двойки)
+template<typename T>
+void merge(std::vector<T> & v, size_t left_id_begin, size_t left_id_end, size_t right_id_end) {
+	auto left_iter = v.begin() + left_id_begin;
+	auto right_iter = v.begin() + left_id_end + 1;
+
+	std::vector<T> temp;
+
+	for (size_t i = 0; i != right_id_end - left_id_begin + 1; ++i) {
+		if (*left_iter < *right_iter)
+			temp.push_back(*left_iter++);
+		else
+			temp.push_back(*right_iter++);
+
+		if (std::distance(v.begin(), right_iter) == right_id_end + 1) {
+			while (left_iter != v.begin() + left_id_end + 1)
+				temp.push_back(*left_iter++);
+			for (size_t i = 0; i != temp.size(); ++i)
+				v[i + left_id_begin] = temp[i];
+			return;
+		}
+
+		if (std::distance(v.begin(), left_iter) == left_id_end + 1) {
+			while (right_iter != v.begin() + right_id_end + 1)
+				temp.push_back(*right_iter++);
+			for (size_t i = 0; i != temp.size(); ++i)
+				v[i + left_id_begin] = temp[i];
+			return;
+		}
+	}
+}
+
+template<typename T>
+void merge_sort(std::vector<T> & v, size_t k) {
+	size_t iter_numb = floor(log2(v.size()));
+
+	for (size_t i = 0; i != iter_numb; ++i) {
+		float left_begin{ 0 }, left_end{ powf(2, i) - 1 }, right_end{ powf(2, i + 1) - 1 };
+		while (right_end < v.size()) {
+			if (right_end + k == v.size())
+				merge(v, left_begin, left_end, right_end + 1);
+			else
+				merge(v, left_begin, left_end, right_end);
+			left_begin += k;	left_end += k;		right_end += k;
+		}
+		k *= 2;
+	}
+}
+
+#pragma endregion
 
 // Задача поиска k-ой порядковой статистики
 template<typename T>
@@ -199,51 +258,108 @@ void counting_sort(std::vector<T> & v) {
 	}
 }
 
-// Сортировка слиянием (работет правильно только для массивов размеров степени двойки)
+#pragma endregion
+
+#pragma region task 2
+
+//	Задача 2.2. Пары в последовательности a_i + a_j = sum, i < j (стр. 34)
+
+
 template<typename T>
-void merge(std::vector<T> & v, size_t left_id_begin, size_t left_id_end, size_t right_id_end) {
-	auto left_iter = v.begin() + left_id_begin;
-	auto right_iter = v.begin() + left_id_end + 1;
-	
-	std::vector<T> temp;
-
-	for (size_t i = 0; i != right_id_end - left_id_begin + 1; ++i) {
-		if (*left_iter < * right_iter)
-			temp.push_back(*left_iter++);
-		else
-			temp.push_back(*right_iter++);
-
-		if (std::distance(v.begin(), right_iter) == right_id_end + 1) {
-			while (left_iter != v.begin() + left_id_end + 1)
-				temp.push_back(*left_iter++);
-			for (size_t i = 0; i != temp.size(); ++i)
-				v[i + left_id_begin] = temp[i];
-			return;
-		}
-
-		if (std::distance(v.begin(), left_iter) == left_id_end + 1) {
-			while (right_iter != v.begin() + right_id_end + 1)
-				temp.push_back(*right_iter++);
-			for (size_t i = 0; i != temp.size(); ++i)
-				v[i + left_id_begin] = temp[i];
-			return;
-		}
+size_t mid_sum_count(std::vector<T> & v, size_t const l, size_t r, size_t const sum) {
+	if (l > r) {
+		return 0;
 	}
-}
-
-template<typename T>
-void merge_sort(std::vector<T> & v, size_t k) {
-	size_t iter_numb = floor(log2(v.size()));
-
-	for (size_t i = 0; i != iter_numb; ++i) {
-		float left_begin{ 0 }, left_end{ powf(2, i) - 1 }, right_end{ powf(2, i + 1) - 1 };
-		while (right_end < v.size()){
-			if (right_end + k == v.size())
-				merge(v, left_begin, left_end, right_end + 1);
+	else {
+		size_t count{ 0 };
+		while (l < r)
+		{
+			if (v.at(l) + v.at(r) > sum)
+				--r;
+			else if (v.at(l) + v.at(r) == sum) {
+				--r;	 ++count;
+			}
 			else
-				merge(v, left_begin, left_end, right_end);
-			left_begin += k;	left_end += k;		right_end += k;
+				break;
 		}
-		k *= 2;
+		return count;
 	}
 }
+
+template<typename T>
+size_t pair_count(std::vector<T> & v, T sum) {
+	q_sort(v, 0, v.size() - 1);
+	display(v);
+
+	size_t l{ 0 }, r{ v.size() - 1 };
+	size_t count{ 0 };
+
+	while (l < r)
+	{
+		count += mid_sum_count(v, l, r, sum);
+		++l;
+	}
+
+	return count;
+}
+
+
+#pragma endregion
+
+#pragma region task 3
+
+// Задача 2.3. Число пересекающихся отрезков (стр 36)
+
+template<typename T>
+struct Jog
+{
+
+	Jog(T begin, T end) : begin_(begin), end_(end) {}
+	~Jog() {}
+
+	bool operator <(Jog const & right) { return end_ < right.end_; }
+
+	bool operator>(Jog const & right) { return end_ > right.end_; }
+
+	bool operator<=(Jog const & right) { return !(*this > right); }
+
+	bool operator>=(Jog const & right) { return !(*this < right); }
+
+	template<typename T1>
+	friend std::ostream & operator<<(std::ostream & os, Jog<T1> const & jog) {
+		os << "[ " << jog.begin_ << " , " << jog.end_ << " ] \n";
+		return os;
+	}
+
+	T begin_;
+	T end_;
+};
+
+
+template<typename T>
+size_t max_jog_count(std::vector<Jog<T>> & v) {
+	q_sort(v, 0, v.size() - 1);
+	size_t max_count{ 0 };
+
+	for (auto iter = v.rbegin(); iter != v.rend() - 1; ++iter) {
+		auto in_iter = iter + 1;
+		size_t count{ 1 };
+
+		while (iter->begin_ <= in_iter->end_) {
+			++count;
+			if (in_iter + 1 != v.rend())
+				++in_iter;
+			else
+				break;
+		}
+
+		if (count > max_count)
+			max_count = count;
+	}
+	return max_count;
+}
+
+#pragma endregion
+
+
+#endif // !part_two_h
