@@ -14,13 +14,11 @@ int main()
 	using std::cout;
 	using std::endl;
 
-	std::vector<int> v(10);
-	int i = 0;
-	for (std::vector<int>::iterator it = v.begin(); it != v.end(); ++it)
-		*it = i++;
-
-	cout << BinSearch(v, -1) << endl;
-	
+	Point A(3, 1);
+	if (Solver(6, A))
+		cout << "Point inside!\n";
+	else
+		cout << "Point outside!\n";
 
 	cout << "Calculations complete!\n";
 
