@@ -13,14 +13,8 @@ int main()
 
 	using std::cout;
 	using std::endl;
-
-	Point A(3, 1);
-	if (Solver(6, A))
-		cout << "Point inside!\n";
-	else
-		cout << "Point outside!\n";
-
-	cout << "Calculations complete!\n";
+	
+	FindOneZeroSequaence(10);
 
 	return 0;
 }

@@ -35,16 +35,68 @@ bool BinSearch(const std::vector<T> & ar, const T & key, int & keyId)
 	
 }
 
-
-
 #pragma endregion
 
 #pragma region task_2
 
-// Задание 3.3.2 (p.40) One has sequence a1..an, a1 != an which consist from 0 and 1 only. We need to find the pair a_{i} != a_{i+1} in time log(n).
+// Task 3.3.2 (p.40) One has sequence a1..an, a1 != an which consist from 0 and 1 only. 
+// We need to find the pair a_{i} != a_{i+1} in time log(n).
+
+// Main Idea is simple, like in binnary search. Consider an bit array: 00 10 00 00 11
+// Choose left = 0, right = size, middle = (right + left) / 2.
+// - If middle = 0, then choose rigth half of an array : because it's wiev: (middle) 0 ... 1 (right) 
+// and between them 0 and 1, so in worst case we find pair 01 in last arrys elements. So the change MUST BE.
+// - If middle = 1, then choose left  half of an array : because it's wiev: (left ) 1 ... 0 (middle)
+// and between them 0 and 1, so in worst case we find pair 10 in first arrys elements. So the change MUST BE.
+
+int FindOneZeroSequaence(const int size)
+{
+	// Initilize an array in accordance with task
+	std::vector<bool> vec(size);
+	for (auto & i : vec)
+		i = ((rand() % 100) % 2 == 0) ? true : false;
+
+	vec.at(0) = ((rand() % 100) % 2 == 0) ? true : false;
+	vec.at(size - 1) = (vec.at(0) == true) ? false : true;
+
+	for (auto i : vec)
+		std::cout << i << ' ';
+	std::cout << std::endl;
+
+
+	// Solution algorithm
+	int leftId = 0;
+	int rigthId = vec.size() - 1;
+	int middleId = 0;
+
+	while (leftId + 1 < rigthId)
+	{
+		middleId = (rigthId + leftId) / 2;
+
+		if (vec.at(middleId) == false)
+		{
+			// Two cases: 0 ... middle ... 1 and 1 ... middle ... 0
+			if (vec.at(0) == 0)
+				leftId = middleId;
+			else
+				rigthId = middleId;
+		}
+		else
+		{
+			// Two cases: 0 ... middle ... 1 and 1 ... middle ... 0
+			if (vec.at(0) == 0)
+				rigthId = middleId;
+			else
+				leftId = middleId;
+		}
+	}
+
+	std::cout << "V[" << leftId << "] = " << vec.at(leftId) << " ; V[" << rigthId << "] = " << vec.at(rigthId) << std::endl;
+
+	return leftId;
+}
 
 #pragma endregion
-
 
 #pragma region task_3
 
@@ -52,8 +104,10 @@ bool BinSearch(const std::vector<T> & ar, const T & key, int & keyId)
 
 // Main idea is thery simple (one could find more information here: https://habrahabr.ru/post/144571/) 
 // - Start from angle formed by p[0], p[1], p[n-1]
-// - Then divide this angle in two: and if to obtain the point we need to turn left - choose upper angle, bootom angle otherwise
-// - At last, when we obtain the last angle, check whenether it intersect main segment: p[up]p[down] intersect p[0]Point. 
+// - Then divide this angle in two: and if to obtain the point we need to turn left - choose upper angle,
+// bootom angle otherwise
+// - At last, when we obtain the last angle, check whenether it intersect main segment: p[up]p[down] 
+// intersect p[0]Point. 
 // - If intersect - then the point is outside of the poligon, inside otherwise.
 
 struct Point
@@ -71,7 +125,8 @@ struct Point
 	}
 };
 
-// Obtain the Z-component of Vector product [ABxBC] [Node] if > 0 turn left, turn right otherwise.
+// Obtain the Z-component of Vector product [ABxBC] [Node] if > 0 turn left, 
+// turn right otherwise.
 int VectorProductZ(const Point & A, const Point & B, const Point & C)
 {
 	return (B.x_ - A.x_) * (C.y_ - B.y_) - (B.y_ - A.y_) * (C.x_ - B.x_);
@@ -89,7 +144,8 @@ bool IsInAngle(const Point & vertexUp, const Point & vertexMiddle, const Point &
 	int up = VectorProductZ(vertexMiddle, vertexUp, point);
 	int bottom = VectorProductZ(vertexMiddle, vertexBottom, point);
 
-	// If point in left rotation relative to up and in right rotation relative to down segments - then in the angle.
+	// If point in left rotation relative to up and in right rotation relative to 
+	// down segments - then in the angle.
 	return (up < 0 && bottom > 0) ? true : false;
 }
 
@@ -103,13 +159,15 @@ bool Solver(const int & n, const Point & point)
 
 	for (auto i : poligon)
 		std::cout << "A(" << i.x_ << " , " << i.y_ << ")\n";
-
+	
+	// Check if point in first big angle
 	if (IsInAngle(poligon.at(n - 1), poligon.at(0), poligon.at(1), point))
 	{
 		int down = 1;
 		int up = n - 1;
 		int middle = 0;
 
+		// Choose half-angle in which point takes place
 		while (down + 1 < up)
 		{
 			middle = (down + up) / 2;
@@ -119,6 +177,7 @@ bool Solver(const int & n, const Point & point)
 				up = middle;
 		}
 
+		// Check on ontersection
 		return !IsIntersects(poligon.at(0), point, poligon.at(down), poligon.at(up));
 	}
 	else
