@@ -14,7 +14,14 @@ int main()
 	using std::cout;
 	using std::endl;
 	
-	FindOneZeroSequaence(10);
+	MyBinTree<int> tree;
+	tree.Insert(10);
+	tree.Insert(4);
+	tree.Insert(11);
+	tree.Insert(2);
+	tree.Insert(15);
+	tree.Insert(5);
+	tree.InorderTraverse();
 
 	return 0;
 }

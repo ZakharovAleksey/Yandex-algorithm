@@ -191,6 +191,122 @@ bool Solver(const int & n, const Point & point)
 
 #pragma endregion
 
+#pragma region task_4
+
+// Task 3.4.1 (p.42) Inorder-traverse procedure implementation in Binnary tree.
+
+#include<memory>
+
+
+template<typename T>
+struct Node
+{
+	std::shared_ptr<Node<T>> left_;
+	std::shared_ptr<Node<T>> rigth_;
+	std::shared_ptr<Node<T>> parent_;
+
+	T key_;
+
+	Node() : left_(nullptr), rigth_(nullptr), parent_(nullptr), key_(T()) {}
+	Node(T key) : left_(nullptr), rigth_(nullptr), parent_(nullptr), key_(key) {}
+};
+
+template<typename T>
+class MyBinTree
+{
+public:
+	MyBinTree();
+	~MyBinTree();
+
+	void Insert(const T & value);
+
+	void InorderTraverse();
+
+private:
+
+	std::shared_ptr<Node<T>> root_;
+
+	// Here we need to pass a constant ref, because unique_ptr could not have a COPY!!!
+	void InorderTraverse(const std::shared_ptr<Node<T>> & curNode);
+};
+
+
+
+#pragma region methods implementation
+
+template<typename T>
+MyBinTree<T>::MyBinTree() : root_(nullptr) {}
+
+template<typename T>
+MyBinTree<T>::~MyBinTree() {}
+
+template<typename T>
+inline void MyBinTree<T>::Insert(const T & value)
+{
+	std::shared_ptr<Node<T>> insNode = std::make_shared<Node<T>>(value);
+
+	if (root_ == nullptr)
+	{
+		root_ = insNode;
+	}
+	else
+	{
+		std::shared_ptr<Node<T>> curNode = root_;
+		std::shared_ptr<Node<T>> parent;
+
+		while (curNode)
+		{
+			parent = curNode;
+
+			if (curNode->key_ > value)
+				curNode = curNode->left_;
+			else
+				curNode = curNode->rigth_;
+		}
+
+		insNode->parent_ = parent;
+		if (value < parent->key_)
+		{
+			parent->left_ = std::move(insNode);
+		}
+		else
+			parent->rigth_ = std::move(insNode);
+
+
+	}
+}
+
+template<typename T>
+inline void MyBinTree<T>::InorderTraverse()
+{
+	InorderTraverse(root_);
+}
+
+
+template<typename T>
+inline void MyBinTree<T>::InorderTraverse(const std::shared_ptr<Node<T>> & curNode)
+{
+	if (curNode->left_ != nullptr)
+	{
+		InorderTraverse(curNode->left_);
+	}
+		
+	std::cout << curNode->key_ << " ";
+	if(curNode->parent_ != nullptr)
+		std::cout << "(" << curNode->parent_->key_ << ") ";
+
+	if (curNode->rigth_ != nullptr)
+	{
+		InorderTraverse(curNode->rigth_);
+	}
+}
+
+
+#pragma endregion
+
+
+
+#pragma endregion
 
 
 #endif // !part_three_h
