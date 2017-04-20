@@ -201,14 +201,14 @@ bool Solver(const int & n, const Point & point)
 template<typename T>
 struct Node
 {
-	std::shared_ptr<Node<T>> left_;
-	std::shared_ptr<Node<T>> rigth_;
-	std::shared_ptr<Node<T>> parent_;
+	std::unique_ptr<Node<T>> left_;
+	std::unique_ptr<Node<T>> right_;
+	std::unique_ptr<Node<T>> parent_;
 
 	T key_;
 
-	Node() : left_(nullptr), rigth_(nullptr), parent_(nullptr), key_(T()) {}
-	Node(T key) : left_(nullptr), rigth_(nullptr), parent_(nullptr), key_(key) {}
+	Node() : left_(nullptr), right_(nullptr), parent_(nullptr), key_(T()) {}
+	Node(T key) : left_(nullptr), right_(nullptr), parent_(nullptr), key_(key) {}
 };
 
 template<typename T>
@@ -219,15 +219,23 @@ public:
 	~MyBinTree();
 
 	void Insert(const T & value);
+	bool Search(const T & value);
+	void Remove(const T & value);
+	
+
+	T Predecessor(std::unique_ptr<Node<T>> & startNode);
 
 	void InorderTraverse();
 
 private:
 
-	std::shared_ptr<Node<T>> root_;
+	std::unique_ptr<Node<T>> root_;
 
 	// Here we need to pass a constant ref, because unique_ptr could not have a COPY!!!
-	void InorderTraverse(const std::shared_ptr<Node<T>> & curNode);
+	void InorderTraverse(const std::unique_ptr<Node<T>> & curNode);
+
+	bool Remove(std::unique_ptr<Node<T>> & curNode, const T & value);
+	void RemovePredecessor(std::unique_ptr<Node<T>> & curNode);
 };
 
 
@@ -243,37 +251,61 @@ MyBinTree<T>::~MyBinTree() {}
 template<typename T>
 inline void MyBinTree<T>::Insert(const T & value)
 {
-	std::shared_ptr<Node<T>> insNode = std::make_shared<Node<T>>(value);
+	std::unique_ptr<Node<T>> insNode = std::make_unique<Node<T>>(value);
 
 	if (root_ == nullptr)
 	{
-		root_ = insNode;
+		root_ = std::move(insNode);
 	}
 	else
 	{
-		std::shared_ptr<Node<T>> curNode = root_;
-		std::shared_ptr<Node<T>> parent;
+		Node<T>* curNode = root_.get();
+		Node<T>* parent = nullptr;
 
 		while (curNode)
 		{
 			parent = curNode;
 
 			if (curNode->key_ > value)
-				curNode = curNode->left_;
+				curNode = curNode->left_.get();
+			else if (curNode->key_ < value)
+				curNode = curNode->right_.get();
 			else
-				curNode = curNode->rigth_;
+				return;
 		}
 
-		insNode->parent_ = parent;
+		//insNode->parent_.reset(parent);
+
 		if (value < parent->key_)
-		{
 			parent->left_ = std::move(insNode);
-		}
 		else
-			parent->rigth_ = std::move(insNode);
-
+			parent->right_ = std::move(insNode);
 
 	}
+}
+
+template<typename T>
+inline bool MyBinTree<T>::Search(const T & value)
+{
+	Node<T>* curNode = root_.get();
+
+	while (curNode)
+	{
+		if (value < curNode->key_)
+			curNode = curNode->left_.get();
+		else if (value > curNode->key_)
+			curNode = curNode->right_.get();
+		else
+			return true;
+	}
+
+	return false;
+}
+
+template<typename T>
+inline void MyBinTree<T>::Remove(const T & value)
+{
+	Remove(root_, value);
 }
 
 template<typename T>
@@ -284,7 +316,7 @@ inline void MyBinTree<T>::InorderTraverse()
 
 
 template<typename T>
-inline void MyBinTree<T>::InorderTraverse(const std::shared_ptr<Node<T>> & curNode)
+inline void MyBinTree<T>::InorderTraverse(const std::unique_ptr<Node<T>> & curNode)
 {
 	if (curNode->left_ != nullptr)
 	{
@@ -292,13 +324,66 @@ inline void MyBinTree<T>::InorderTraverse(const std::shared_ptr<Node<T>> & curNo
 	}
 		
 	std::cout << curNode->key_ << " ";
-	if(curNode->parent_ != nullptr)
-		std::cout << "(" << curNode->parent_->key_ << ") ";
 
-	if (curNode->rigth_ != nullptr)
+	if (curNode->right_ != nullptr)
 	{
-		InorderTraverse(curNode->rigth_);
+		InorderTraverse(curNode->right_);
 	}
+}
+
+template<typename T>
+inline bool MyBinTree<T>::Remove(std::unique_ptr<Node<T>>& curNode, const T & value)
+{
+	if (curNode && value < curNode->key_)
+		Remove(curNode->left_, value);
+
+	if (curNode && value > curNode->key_)
+		Remove(curNode->right_, value);
+
+	if (curNode && value == curNode->key_)
+	{
+		// Case where current node is a leaf
+		if (!curNode->left_ && !curNode->right_)
+			curNode.release();
+		// Case where current node has exactly one child
+		else if (curNode->left_ && !curNode->right_)
+			curNode = std::move(curNode->left_);
+		else if (!curNode->left_ && curNode->right_)
+			curNode = std::move(curNode->right_);
+		// Case where current node has two childs
+		else
+		{
+			curNode->key_ = Predecessor(curNode);
+			RemovePredecessor(curNode->left_);
+		}
+
+		return true;
+	}
+	return false;
+
+}
+
+template<typename T>
+inline void MyBinTree<T>::RemovePredecessor(std::unique_ptr<Node<T>>& curNode)
+{
+	if (curNode->right_)
+		RemovePredecessor(curNode->right_);
+	
+	if (!curNode->left_ && !curNode->right_)
+		curNode.release();
+}
+
+template<typename T>
+inline T MyBinTree<T>::Predecessor(std::unique_ptr<Node<T>>& startNode)
+{
+	Node<T>* curNode = startNode->left_.get();
+
+	while (curNode->right_)
+	{
+		curNode = curNode->right_.get();
+	}
+
+	return curNode->key_;
 }
 
 
