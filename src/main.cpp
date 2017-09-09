@@ -68,6 +68,36 @@ public:
 			Search(root_, value);
 	}
 
+	void Remove(const T value)
+	{
+		if (root_ == nullptr)
+			return;
+		Node<T>* desired = Search1(root_, value);
+		if (desired == nullptr)
+			return;
+		Node<T>* left = desired->left;
+		if (left == nullptr)
+		{
+			root_ = desired->right;
+			root_->parent = nullptr;
+			free(desired);
+			return;
+		}
+		Node<T>* right = desired->right;
+		right->parent = nullptr;
+		left->parent = nullptr;
+		free(desired);
+
+		while (left->right)
+			left = left->right;
+		Splay(left);
+		root_ = left;
+		root_->right = right;
+		root_->parent = nullptr;
+
+	}
+
+
 	void InorderTraverse()
 	{
 		InorderTraverse(root_);
@@ -83,7 +113,7 @@ private:
 		InorderTraverse(cur->left);
 		std::cout << cur->value << ' ';
 		if (cur->parent == nullptr)
-			std::cout << "<-r";
+			std::cout << "<-r ";
 
 		InorderTraverse(cur->right);
 	}
@@ -161,6 +191,30 @@ private:
 			Splay(cur_node);
 	}
 
+	Node<T>* Search1(Node<T>* cur, const T value)
+	{
+		Node<T>* cur_node = cur;
+		bool isInTree = false;
+		while (cur_node)
+		{
+			if (value < cur_node->value)
+				cur_node = cur_node->left;
+			else if (value > cur_node->value)
+				cur_node = cur_node->right;
+			else
+			{
+				isInTree = true;
+				break;
+			}
+		}
+		if (isInTree)
+		{
+			Splay(cur_node);
+			return root_;
+		}
+		return nullptr;
+	}
+
 
 	void rightRotate(Node<T>* y)
 	{
@@ -222,6 +276,12 @@ int main()
 	tree.InorderTraverse();
 
 	tree.Search(-5);
+	tree.InorderTraverse();
+
+	tree.Remove(-1);
+	tree.InorderTraverse();
+
+	tree.Insert(-1);
 	tree.InorderTraverse();
 
 	return 0;
